@@ -2,6 +2,7 @@ package com.workshop;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -61,7 +62,9 @@ public class Service {
 		                .body("invalid data");
 		    }
 		        
-		   
+		    List<String> bookedTimeSlots = new ArrayList<>();
+		    List<String> allBookedTimeSlots = new ArrayList<>();
+
 		    
 		    for (Appointment existingAppointment : appointments) {
 		        // check if appointment date and doctor are the same
@@ -71,10 +74,26 @@ public class Service {
 		            if (appointment.getAppointmentTime().isBefore(existingAppointment.getAppointmentTime().plusHours(existingAppointment.getTimeRequired())) &&
 		                    existingAppointment.getAppointmentTime().isBefore(appointment.getAppointmentTime().plusHours(appointment.getTimeRequired()))) {
 		                System.out.println("appointment overlaps with existing appointment");
-		                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("appointment overlaps with existing appointment");
+		                allBookedTimeSlots.add(existingAppointment.getAppointmentTime().toString());
+
+		                bookedTimeSlots.add(existingAppointment.getAppointmentTime().toString());
+
+		               // return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("appointment overlaps with existing appointment");
+		            }else {
+		                allBookedTimeSlots.add(existingAppointment.getAppointmentTime().toString());
 		            }
 		        }
+		    
+		    if (!bookedTimeSlots.isEmpty()) {
+		    	 String message = "Appointment not available for the given date and time. The following time slots are already booked: ";
+		    	    for (String time : allBookedTimeSlots) {
+		    	        message += time + "-" + LocalTime.parse(time).plusHours(existingAppointment.getTimeRequired()) + ", ";
+		    	    }
+		    	    message = message.substring(0, message.length() - 2);
+		    	    return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(message);
+		    	}
 		    }
+		    
 		    
 		    
 		    
